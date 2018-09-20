@@ -44,7 +44,7 @@ def startVM(customerName):
     # vmrun -T fusion start <path_to_file.vmx>
     subprocess.call("vmrun -T fusion start " + basePath + customerName + "/VM/" + customerName + "-Ubuntu" + ".vmwarevm/" + customerName + "-Ubuntu" + ".vmx", shell=True)
     print("[!] Waiting two minutes to let the VM fully start...")
-    time.sleep(1)
+    time.sleep(120)
     print("[+] VM Should be Started")
 
 # Determine VM IP
