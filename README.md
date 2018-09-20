@@ -11,3 +11,4 @@ Follow prompts... it's pretty easy.
 - Install OVFTool from here: https://my.vmware.com/web/vmware/details?productId=352&downloadGroup=OVFTOOL350
 - Install VMWare Fusion (Untested on any other environments)
 - Install Python3
+- Modify SOE_setup.py to ensure variables are correct
