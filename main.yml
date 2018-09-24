@@ -122,21 +122,21 @@
     file:
       path: /opt/msfinstall
       mode: 0755
-#  - name: Install MSF
-#    shell: ./msfinstall
-#    args:
-#      chdir: /opt/
-#  - name: Configure MSF
-#    expect:
-#      command: msfconsole
-#      responses:
-#        (?i)database: "yes"
-#        (?i)msf: "exit"
-#      timeout: 60
-#  - name: Delete MSF Installer
-#    file:
-#      path: /opt/msfinstall
-#      state: absent
+  - name: Install MSF
+    shell: ./msfinstall
+    args:
+      chdir: /opt/
+  - name: Configure MSF
+    expect:
+      command: msfconsole
+      responses:
+        (?i)database: "yes"
+        (?i)msf: "exit"
+      timeout: 60
+  - name: Delete MSF Installer
+    file:
+      path: /opt/msfinstall
+      state: absent
   - name: Clone Veil (GIT)
     git:
       repo: 'https://github.com/Veil-Framework/Veil.git'
@@ -251,6 +251,14 @@
       update: yes
   - name: Configure gobuster
     shell: go get github.com/OJ/gobuster/libgobuster
+    args:
+      chdir: '/opt/gobuster'
+  - name: Configure gobuster
+    shell: go get github.com/OJ/gobuster/gobusterdir
+    args:
+      chdir: '/opt/gobuster'
+  - name: Configure gobuster
+    shell: go get golang.org/x/crypto/ssh/terminal
     args:
       chdir: '/opt/gobuster'
   - name: Clone LinkScrape (GIT)

@@ -3,18 +3,24 @@ import shutil
 import subprocess
 import time
 from datetime import datetime
+import configparser
 
 # This script will work in conjunction with Ansible to configure a Red Team/PenTesting SOE
 # The python script will clone the base VM, start up the VM, obtain the IP, and kick off the Ansible Playbook
 # Variables
-basePath = "" # path to a folder containing a TEMPLATE folder which will store customer data (i.e., /opt/customers/)
-OVATemplate = "" # name of VM template in ova format (i.e., Ubuntu-Master.ova)
 startTime = datetime.now().strftime('%Y-%m-%d %H:%M:%S') # helps give us information on how much time it took to run
-privKeyLoc = "" # private key file (include full path) for ssh to VM
-SOEuser = "" # username for SOE
+
+def config():
+    config = configparser.ConfigParser()
+    config.read('config.txt')
+    basePath = config['DEFAULT']['basePath']
+    OVATemplate = config['DEFAULT']['OVATemplate']
+    privKeyLoc = config['DEFAULT']['privKeyLoc']
+    SOEuser = config['DEFAULT']['SOEuser']
+    return basePath, OVATemplate, privKeyLoc, SOEuser
 
 # Clone VM
-def cloneBaseVM(customerName):
+def cloneBaseVM(customerName, basePath, OVATemplate, privKeyLoc, SOEuser):
     print("[+] Deploying Base VM from OVA")
     # Need OVFTool from here: https://my.vmware.com/web/vmware/details?productId=352&downloadGroup=OVFTOOL350
     # /Applications/VMware\ OVF\ Tool/ovftool --allowExtraConfig --lax <path_to_ovf_file> <path_to_target_folder>
@@ -22,7 +28,7 @@ def cloneBaseVM(customerName):
     subprocess.call("/Applications/VMware\ OVF\ Tool/ovftool " + args, shell=True)
     print("[+] VM Cloned")
 
-def cusFolderSetup():
+def cusFolderSetup(basePath):
     # Get Customer Name to setup folder
     templateName = "TEMPLATE"
     while True:
@@ -39,16 +45,16 @@ def cusFolderSetup():
     return customerName
 
 # Start VM
-def startVM(customerName):
+def startVM(customerName, basePath, OVATemplate, privKeyLoc, SOEuser):
     print("[+] Starting VM")
     # vmrun -T fusion start <path_to_file.vmx>
     subprocess.call("vmrun -T fusion start " + basePath + customerName + "/VM/" + customerName + "-Ubuntu" + ".vmwarevm/" + customerName + "-Ubuntu" + ".vmx", shell=True)
-    print("[!] Waiting two minutes to let the VM fully start...")
-    time.sleep(120)
+    print("[!] Waiting a minute to let the VM fully start...")
+    time.sleep(60)
     print("[+] VM Should be Started")
 
 # Determine VM IP
-def vmIPlookup(customerName):
+def vmIPlookup(customerName, basePath, OVATemplate, privKeyLoc, SOEuser):
     print("[+] Determining VM IP and updating hostlist")
     # vmrun getGuestIPAddress <path_to_file.vmx>
     vm_ip = subprocess.check_output("vmrun getGuestIPAddress " + basePath + customerName + "/VM/" + customerName + "-Ubuntu" + ".vmwarevm/" + customerName + "-Ubuntu" + ".vmx", shell=True)
@@ -56,7 +62,7 @@ def vmIPlookup(customerName):
     vm_ip = vm_ip.split("\\n")[0]
     return vm_ip
 
-def ansibleFun(vm_ip):
+def ansibleFun(vm_ip, basePath, OVATemplate, privKeyLoc, SOEuser):
     # Write IP to hosts file
     f = open("hosts.txt", "w")
     f.write(vm_ip)
@@ -67,11 +73,12 @@ def ansibleFun(vm_ip):
     subprocess.call("ansible-playbook -i hosts.txt -become -u " + SOEuser + " --private-key=" + privKeyLoc + " -K main.yml", shell=True)
 
 def main():
-    customerName = cusFolderSetup()
-    cloneBaseVM(customerName)
-    startVM(customerName)
-    vm_ip = vmIPlookup(customerName)
-    ansibleFun(vm_ip)
+    basePath, OVATemplate, privKeyLoc, SOEuser = config()
+    customerName = cusFolderSetup(basePath)
+    cloneBaseVM(customerName, basePath, OVATemplate, privKeyLoc, SOEuser)
+    startVM(customerName, basePath, OVATemplate, privKeyLoc, SOEuser)
+    vm_ip = vmIPlookup(customerName, basePath, OVATemplate, privKeyLoc, SOEuser)
+    ansibleFun(vm_ip, basePath, OVATemplate, privKeyLoc, SOEuser)
     endTime = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     print("[+] Completed.")
     print("[+] The start time was: " + startTime)
