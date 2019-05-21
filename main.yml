@@ -15,15 +15,6 @@
     apt_key:
       keyserver: hkp://keyserver.ubuntu.com:80
       id: EEA14886
-  - name: Add another deb-src to sources.list for Oracle Java
-    apt_repository:
-      repo: deb-src http://ppa.launchpad.net/webupd8team/java/ubuntu xenial main
-      state: present
-      validate_certs: no
-  - name: Yet another thing to get Oracle Java to install silently
-    shell: echo debconf shared/accepted-oracle-license-v1-1 select true | sudo debconf-set-selections
-  - name: Yet another thing to get Oracle Java to install silently
-    shell: echo debconf shared/accepted-oracle-license-v1-1 seen true | sudo debconf-set-selections
   - name: Update Ubuntu Repos
     apt:
       update_cache: yes
@@ -60,6 +51,7 @@
         - p7zip
         - python-setuptools
         - python-pip
+        - python3-pip
         - python-dev
         - tcptrack
         - tcpdump
@@ -76,8 +68,10 @@
         - golang-go
         - hping3
         - openvpn
+        - openconnect
+        - sslscan
         - unzip
-#        - oracle-java8-installer
+        - wireshark-qt
   - name: PIP Stuff
     pip:
       name: pexpect impacket crackmapexec lxml
@@ -107,13 +101,6 @@
       dest: '/opt/empire'
       clone: yes
       update: yes
-  - name: Configure Empire
-    expect:
-      chdir: /opt/empire/setup
-      command: ./install.sh
-      responses:
-        (?i)generation: ""
-      timeout: 600
   - name: Download Metasploit Framework Installer
     get_url:
       url: https://raw.githubusercontent.com/rapid7/metasploit-omnibus/master/config/templates/metasploit-framework-wrappers/msfupdate.erb
@@ -126,31 +113,12 @@
     shell: ./msfinstall
     args:
       chdir: /opt/
-  - name: Configure MSF
-    expect:
-      command: msfconsole
-      responses:
-        (?i)database: "yes"
-        (?i)msf: "exit"
-      timeout: 60
-  - name: Delete MSF Installer
-    file:
-      path: /opt/msfinstall
-      state: absent
   - name: Clone Veil (GIT)
     git:
       repo: 'https://github.com/Veil-Framework/Veil.git'
       dest: '/opt/veil'
       clone: yes
       update: yes
-#  - name: Configure Veil #this might need to be done from the GUI
-#    expect:
-#      chdir: /opt/veil/config/
-#      command: ./setup.sh --silent --force
-#      responses:
-#        (?i)Metasploit: ""
-#        (?i)msfvenom: /usr/bin/
-#      timeout: 600
   - name: Clone sslscan (GIT)
     git:
       repo: 'https://github.com/rbsec/sslscan.git'
@@ -173,7 +141,7 @@
       dest: '/opt/eyewitness'
       clone: yes
       update: yes
-  - name: Configure EyeWitness # error during bzip unpacking but seems to still work?
+  - name: Configure EyeWitness
     shell: ./setup.sh
     args:
       chdir: /opt/eyewitness/setup
@@ -249,18 +217,6 @@
       dest: '/opt/gobuster'
       clone: yes
       update: yes
-  - name: Configure gobuster
-    shell: go get github.com/OJ/gobuster/libgobuster
-    args:
-      chdir: '/opt/gobuster'
-  - name: Configure gobuster
-    shell: go get github.com/OJ/gobuster/gobusterdir
-    args:
-      chdir: '/opt/gobuster'
-  - name: Configure gobuster
-    shell: go get golang.org/x/crypto/ssh/terminal
-    args:
-      chdir: '/opt/gobuster'
   - name: Clone LinkScrape (GIT)
     git:
       repo: 'https://github.com/NickSanzotta/linkScrape.git'
@@ -309,14 +265,70 @@
       dest: '/opt/wordlists'
       clone: yes
       update: yes
-#  - name: Setup Oracle Java to be primary (for CS)
-#    shell: update-java-alternatives -s java-8-oracle
   - name: Setup UFW
     ufw:
       state: enabled
       rule: limit
       port: ssh
       proto: tcp
+- name: Configure Tools
+  hosts: all
+  become: false
+  tasks:
+  - name: Configure MSF
+    expect:
+      echo: yes
+      command: msfconsole
+      responses:
+         'Would you like to use and setup a new database (recommended)?': "yes"
+         'Initial MSF web service account username?': ""
+         'Initial MSF web service account password?': ""
+         'msf5': "exit"
+      timeout: 120
+  - name: Configure Veil
+    expect:
+      chdir: /opt/veil/config/
+      command: ./setup.sh --silent --force
+      responses:
+        (?i)Metasploit: ""
+        (?i)msfvenom: /usr/bin/
+      timeout: 600
+  - name: Configure Empire
+    expect:
+      chdir: /opt/empire/setup
+      command: ./install.sh
+      responses:
+        (?i)generation: ""
+      timeout: 600
+  - name: Configure .bashrc settings
+    blockinfile:
+      path: ~/.bashrc
+      block: |
+        alias removeitall='rm -rf /'
+  - name: Configure gobuster
+    shell: go get github.com/OJ/gobuster/libgobuster
+    args:
+      chdir: '/opt/gobuster'
+  - name: Configure gobuster
+    shell: go get github.com/OJ/gobuster/gobusterdir
+    args:
+      chdir: '/opt/gobuster'
+  - name: Configure gobuster
+    shell: go get github.com/OJ/gobuster/gobusterdns
+    args:
+      chdir: '/opt/gobuster'
+  - name: Configure gobuster
+    shell: go get golang.org/x/crypto/ssh/terminal
+    args:
+      chdir: '/opt/gobuster'
+- name: Cleanup
+  hosts: all
+  become: true
+  tasks:
+  - name: Delete MSF Installer
+    file:
+      path: /opt/msfinstall
+      state: absent
   - name: Apt Cleanup
     apt:
       autoclean: yes
