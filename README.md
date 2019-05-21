@@ -7,9 +7,10 @@ This script will setup a fresh testing VM for each engagement.
 Follow prompts... it's pretty easy.
 
 ## Setup:
-- Install Ansible
+- Install and setup WSL (if on Windows)
+- Install Ansible (Inside WSL if on Windows)
 - Install OVFTool from here: https://my.vmware.com/web/vmware/details?productId=352&downloadGroup=OVFTOOL350
-- Install VMWare Fusion (Untested on any other environments)
+- Install VMWare Fusion (Mac) or Workstation (Linux or Windows)
 - Install Python3
 - Modify config.txt to ensure variables are correct
 - Run SOE_setup.py
