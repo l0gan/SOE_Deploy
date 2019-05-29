@@ -3,3 +3,4 @@ basePath =
 OVATemplate =
 privKeyLoc =
 SOEuser =
+WSLBash = false
