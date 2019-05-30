@@ -174,6 +174,7 @@ def main():
     print("[+] Completed.")
     print("[+] The start time was: " + startTime)
     print("[+] The end time was: " + endTime)
+    
 
 if __name__ == '__main__':
     main()
