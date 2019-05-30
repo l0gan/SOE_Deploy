@@ -1,6 +1,5 @@
 [DEFAULT]
-basePath = c:/Users/l0gan/Documents/Customers/
-OVATemplate = xUbuntu-Master.ova
-privKeyLoc = /mnt/c/Users/l0gan/Documents/.ssh/id_rsa_soe
-SOEuser = l0gan
-WSLBash = false
+basePath = 
+OVATemplate =
+privKeyLoc =
+SOEuser =
