@@ -60,11 +60,11 @@ def cloneBaseVM(customerName, basePath, OVATemplate, privKeyLoc, SOEuser, osArch
     print("[+] Deploying Base VM from OVA")
     # Need OVFTool from here: https://my.vmware.com/web/vmware/details?productId=352&downloadGroup=OVFTOOL350
     # /Applications/VMware\ OVF\ Tool/ovftool --allowExtraConfig --lax <path_to_ovf_file> <path_to_target_folder>
-    args = "--quiet --allowExtraConfig --lax --name==" + customerName + "-Ubuntu " + basePath + OVATemplate + " " + basePath + customerName + "/VM/"
+    args = "--allowExtraConfig --lax --name==" + customerName + " " + basePath + OVATemplate + " " + basePath + customerName + "/VM/"
     if osArch == 'win':
-        subprocess.call(["c:/" + ovftool_path[0] + "/ovftool.exe", "--quiet", "--allowExtraConfig", "--lax", "--name=" + customerName + "-Ubuntu", basePath + OVATemplate, basePath + customerName + "\VM"])
+        subprocess.call(["c:/" + ovftool_path[0] + "/ovftool.exe", "--allowExtraConfig", "--lax", "--name=" + customerName + "", basePath + OVATemplate, basePath + customerName + "/VM"])
     if osArch == 'wsl':
-        subprocess.call(["/mnt/c/" + ovftool_path[0].replace("\\", "") + "/ovftool.exe", "--quiet", "--allowExtraConfig", "--lax", "--name=" + customerName + "-Ubuntu", basePath + OVATemplate, basePath + customerName + "\VM"])
+        subprocess.call(["/mnt/c/" + ovftool_path[0].replace("\\", "") + "/ovftool.exe", "--allowExtraConfig", "--lax", "--name=" + customerName + "", basePath + OVATemplate, basePath + customerName + "/VM"])
     elif osArch == 'linux':
         subprocess.call("ovftool " + args, shell=True)
     elif osArch == 'mac':
@@ -98,25 +98,25 @@ def startVM(customerName, basePath, OVATemplate, privKeyLoc, SOEuser, osArch):
         arg2 = "-T"
         arg3 = "ws" #change to fusion if Mac
         arg4 = "start"
-        arg5 = basePath + customerName + "/VM/" + customerName + "-Ubuntu/" + customerName + "-Ubuntu" + ".vmx"
+        arg5 = basePath + customerName + "/VM/" + customerName + "/" + customerName + "" + ".vmx"
         subprocess.call([arg1, arg2, arg3, arg4, arg5], shell=True)
     if osArch == 'wsl':
-        subprocess.call("/mnt/c/" + vmrun_path + "/vmrun.exe" + " -T ws start " + basePath + customerName + "/VM/" + customerName + "-Ubuntu/" + customerName + "-Ubuntu" + ".vmx", shell=True)
+        subprocess.check_output("/mnt/c/" + vmrun_path + "/vmrun.exe" + " -T ws start " + basePath + customerName + "/VM/" + customerName + "/" + customerName + "" + ".vmx", shell=True)
     elif osArch == 'linux':
-        subprocess.call("vmrun -T ws start " + basePath + customerName + "/VM/" + customerName + "-Ubuntu" + ".vmwarevm/" + customerName + "-Ubuntu" + ".vmx", shell=True)
+        subprocess.call("vmrun -T ws start " + basePath + customerName + "/VM/" + customerName + "" + ".vmwarevm/" + customerName + "" + ".vmx", shell=True)
     elif osArch == 'mac':
-        subprocess.call("vmrun -T fusion start " + basePath + customerName + "/VM/" + customerName + "-Ubuntu" + ".vmwarevm/" + customerName + "-Ubuntu" + ".vmx", shell=True)
+        subprocess.call("vmrun -T fusion start " + basePath + customerName + "/VM/" + customerName + "" + ".vmwarevm/" + customerName + "" + ".vmx", shell=True)
 
 # Determine VM IP
 def vmIPlookup(customerName, basePath, OVATemplate, privKeyLoc, SOEuser, osArch):
     print("[+] Determining VM IP and updating hostlist")
     # vmrun getGuestIPAddress <path_to_file.vmx>
     if osArch == 'win':
-        vm_ip = subprocess.check_output(["c:/" + vmrun_path.replace("\\", "") + "/vmrun.exe", "getGuestIPAddress", basePath + customerName + "/VM/" + customerName + "-Ubuntu/" + customerName + "-Ubuntu" + ".vmx"], shell=True)
+        vm_ip = subprocess.check_output(["c:/" + vmrun_path.replace("\\", "") + "/vmrun.exe", "getGuestIPAddress", basePath + customerName + "/VM/" + customerName + "/" + customerName + "" + ".vmx"], shell=True)
     elif osArch == 'wsl':
-        vm_ip = subprocess.check_output("/mnt/c/" + vmrun_path + "/vmrun.exe getGuestIPAddress " + basePath + customerName + "/VM/" + customerName + "-Ubuntu/" + customerName + "-Ubuntu" + ".vmx", shell=True)
+        vm_ip = subprocess.check_output("/mnt/c/" + vmrun_path + "/vmrun.exe getGuestIPAddress " + basePath + customerName + "/VM/" + customerName + "/" + customerName + "" + ".vmx", shell=True)
     else:
-        vm_ip = subprocess.check_output("vmrun getGuestIPAddress " + basePath + customerName + "/VM/" + customerName + "-Ubuntu" + ".vmwarevm/" + customerName + "-Ubuntu" + ".vmx", shell=True)
+        vm_ip = subprocess.check_output("vmrun getGuestIPAddress " + basePath + customerName + "/VM/" + customerName + "" + ".vmwarevm/" + customerName + "" + ".vmx", shell=True)
     vm_ip = str(vm_ip).split("'")[1]
     vm_ip = vm_ip.split("\\n")[0]
     if osArch == 'win' or osArch == 'wsl':
@@ -153,10 +153,13 @@ def main():
     basePath, OVATemplate, privKeyLoc, SOEuser, WSLBash = config()
     if WSLBash.upper() == "TRUE":
         osArch = "wsl"
+        basePath = basePath.replace("c:", "/mnt/c")
     else:
         osArch = discoverOsArch()
     checkOva(osArch)
     customerName = cusFolderSetup(basePath)
+    if osArch == "wsl":
+        basePath = basePath.replace("/mnt/c", "c:")
     cloneBaseVM(customerName, basePath, OVATemplate, privKeyLoc, SOEuser, osArch)
     startVM(customerName, basePath, OVATemplate, privKeyLoc, SOEuser, osArch)
     try:
@@ -171,6 +174,7 @@ def main():
     print("[+] Completed.")
     print("[+] The start time was: " + startTime)
     print("[+] The end time was: " + endTime)
+    
 
 if __name__ == '__main__':
     main()
