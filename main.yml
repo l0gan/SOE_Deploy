@@ -74,15 +74,15 @@
         - wireshark-qt
   - name: PIP Stuff
     pip:
-      name: pexpect impacket crackmapexec lxml
-  - name: CPAN Stuff
-    expect:
-      responses:
-        (?i)automatically: "yes"
-        (?i)local::lib: ""
-        (?i)bashrc: "yes"
-      timeout: 600
-      command: cpan -i LWP::Simple LWP::UserAgent HTML::TagParser URI::Fetch HTTP::Cookies IO::Socket HTML::TableExtract Getopt::Std Net::SNMP NetAddr::IP #Net::SSL
+      name: pexpect #impacket crackmapexec lxml
+#  - name: CPAN Stuff
+#    expect:
+#      responses:
+#        (?i)automatically: "yes"
+#        (?i)local::lib: ""
+#        (?i)bashrc: "yes"
+#      timeout: 600
+#      command: cpan -i LWP::Simple LWP::UserAgent HTML::TagParser URI::Fetch HTTP::Cookies IO::Socket HTML::TableExtract Getopt::Std Net::SNMP NetAddr::IP #Net::SSL
   - name: Install Apache2
     apt:
       name: apache2
